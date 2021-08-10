@@ -5,6 +5,8 @@ This code follows, step by step, the same types of calls made by the Python and 
 
 Developed with Apache NetBeans 12.4 on macOS. Tested on macOS in NetBeans with JDK 16.
 
+Requires: https://github.com/stleary/JSON-java
+
 The NWS API information is located at: https://weather-gov.github.io/api/general-faqs
 
 The code uses the sample lat-lon provided by the faq (the location of the Washington Monument); you can change this to any other appropriate location.
