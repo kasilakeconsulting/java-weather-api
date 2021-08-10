@@ -23,7 +23,7 @@ import java.util.logging.Logger;
 /*
 How I got NetBeans to accept the org.json import (macOS):
 
-- Under NetBeansProjects\weatherAPI\src\main\java I created libs and added the json-20210307.jar jar there.
+- Under NetBeansProjects\weatherAPI\src\main\java I created folder libs and added json-20210307.jar there.
 - The IDE refreshed the project to include this folder and file.
 - This page (https://stackoverflow.com/questions/17693040/adding-external-jar-to-maven-project-in-netbeans) shows how to add a dependency.
 - I used the groupid, artifactid, and version provided in the pom.xml file provided by this jar (use IDE to show jar contents, open META-INF.maven.org.json.json subfolder).
@@ -55,6 +55,9 @@ public class MainClass {
         URL requestURL = null;
         String inputLine = "", dataRaw = "";
         JSONObject dataJSON  = null, propertiesJSON = null;
+        JSONArray periodsJSON = null;
+        URLConnection uc = null;
+        BufferedReader in = null;
         
         try {
             requestURL = new URL("https://api.weather.gov/points/" + latLon);
@@ -67,12 +70,13 @@ public class MainClass {
             if (statusCode != 200) {
                 System.out.println("API call failed");
             } else {
-                URLConnection uc = requestURL.openConnection();
+                uc = requestURL.openConnection();
 
-                BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+                in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
 
                 System.out.println("\nResponse text:");
                 
+                dataRaw = "";
                 while ((inputLine = in.readLine()) != null) {
                     System.out.println(inputLine);
                     dataRaw = dataRaw.concat(inputLine);
@@ -92,6 +96,43 @@ public class MainClass {
                 
                 System.out.println("\nRequesting forecast data...");
                 
+                statusCode = new checkConnection(requestURL).status;
+                System.out.println("\nResponse code: " + String.valueOf(statusCode));
+                
+                if (statusCode != 200) {
+                    System.out.println("API call failed");
+                } else {
+                    uc = requestURL.openConnection();
+                    
+                    in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+
+                    System.out.println("\nResponse text:");
+                
+                    dataRaw = "";
+                    while ((inputLine = in.readLine()) != null) {
+                        System.out.println(inputLine);
+                        dataRaw = dataRaw.concat(inputLine);
+                    }
+
+                    in.close();
+                    
+                    // Parse the data into JSON format.
+                    dataJSON = new JSONObject(dataRaw);
+                
+                    System.out.println("\nJSON text:\n\n" + dataJSON.toString());
+                    
+                    propertiesJSON = dataJSON.getJSONObject("properties"); 
+                    periodsJSON = propertiesJSON.getJSONArray("periods");
+                    
+                    System.out.println("\nForcasts:");
+                    
+                    for (int i = 0; i < periodsJSON.length(); i++) {
+                        dataJSON = periodsJSON.getJSONObject(i);
+                        System.out.println(dataJSON.getString("name")+": "+dataJSON.getString("detailedForecast"));
+                    }                   
+                    
+                    System.out.println("\nDone!");
+                }
                 
             }
 
